@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button'; // Import Button
 import { Input } from '@/components/ui/input'; // Import Input
 import { Textarea } from '@/components/ui/textarea'; // Import Textarea
 import { Trash, Pencil } from 'lucide-react'; // Import Trash and Pencil icons
+import { use } from 'react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -44,7 +45,7 @@ export default function BrandPage({ params }: { params: { id: string } }) {
   const [editDescription, setEditDescription] = useState(''); // New state for editing description
   const router = useRouter();
   const { data: session, status } = useSession();
-
+	const { id } = use(params);
   useEffect(() => {
     if (status === 'loading') return;
 

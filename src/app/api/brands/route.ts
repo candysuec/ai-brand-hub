@@ -1,52 +1,89 @@
-import { PrismaClient } from '@prisma/client'; // Import PrismaClient
-import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/auth';
+import { NextRequest, NextResponse } from "next/server";
+import { PrismaClient } from "@prisma/client";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/auth"; // adjust if your auth file is in a different folder
 
-export async function POST(req: Request) {
-  const prisma = new PrismaClient(); // Instantiate PrismaClient
+const prisma = new PrismaClient();
+
+export async function POST(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
+    console.log("Session data:", session);
 
-    if (!session || !session.user || !session.user.id) {
-      return new NextResponse('Unauthorized', { status: 401 });
+    // Try to get userId from session, fallback to lookup by email
+    let userId = session?.user?.id;
+
+    if (!userId && session?.user?.email) {
+      const userRecord = await prisma.user.findUnique({
+        where: { email: session.user.email },
+        select: { id: true },
+      });
+      userId = userRecord?.id || null;
+    }
+
+    if (!userId) {
+      return NextResponse.json(
+        { error: "Unauthorized — user not found or missing ID" },
+        { status: 401 }
+      );
     }
 
     const { name, description } = await req.json();
+
+    if (!name || !description) {
+      return NextResponse.json(
+        { error: "Name and description are required" },
+        { status: 400 }
+      );
+    }
+
     const brand = await prisma.brand.create({
       data: {
         name,
         description,
-        userId: session.user.id,
+        userId,
       },
     });
-    return NextResponse.json(brand);
-  } catch (error) {
-    console.error('[BRANDS_POST]', error);
-    return new NextResponse('Internal Error', { status: 500 });
+
+    return NextResponse.json({ success: true, brand });
+  } catch (error: any) {
+    console.error("[BRANDS_POST]", error);
+    return NextResponse.json(
+      { error: error.message || "Internal Server Error" },
+      { status: 500 }
+    );
   }
 }
 
 export async function GET() {
-    const prisma = new PrismaClient(); // Instantiate PrismaClient
-    try {
-        const session = await getServerSession(authOptions);
+  try {
+    const session = await getServerSession(authOptions);
+    console.log("Session data:", session);
 
-        if (!session || !session.user || !session.user.id) {
-            return new NextResponse('Unauthorized', { status: 401 });
-        }
+    // Try to get userId from session, fallback to lookup by email
+    let userId = session?.user?.id;
 
-        const brands = await prisma.brand.findMany({
-            where: {
-                userId: session.user.id,
-            },
-            orderBy: {
-                createdAt: 'desc',
-            }
-        });
-        return NextResponse.json(brands);
-    } catch (error) {
-        console.error('[BRANDS_GET]', error);
-        return new NextResponse('Internal Error', { status: 500 });
+    if (!userId && session?.user?.email) {
+      const userRecord = await prisma.user.findUnique({
+        where: { email: session.user.email },
+        select: { id: true },
+      });
+      userId = userRecord?.id || null;
     }
+
+    if (!userId) {
+      // Always return an empty array so UI doesn't crash
+      return NextResponse.json([]);
+    }
+
+    const brands = await prisma.brand.findMany({
+      where: { userId },
+      orderBy: { createdAt: "desc" },
+    });
+
+    return NextResponse.json(brands);
+  } catch (error: any) {
+    console.error("[BRANDS_GET]", error);
+    return NextResponse.json([]);
+  }
 }
