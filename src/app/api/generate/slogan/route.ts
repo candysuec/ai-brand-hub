@@ -1,22 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client'; // Import PrismaClient
+import { PrismaClient } from '@prisma/client';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/auth';
 
-// This is a placeholder for the actual Gemini API client.
-const callGeminiAPI = async (prompt: string) => {
-  await new Promise(resolve => setTimeout(resolve, 1500));
-  const mockApiResponse = [
-    `The future of branding is here, for ${prompt}.`,
-    `Unlock your brand's potential with ${prompt}.`,
-    `AI-powered branding, simplified for ${prompt}.`,
-    `Your brand, reimagined with ${prompt}.`,
-  ];
-  return mockApiResponse;
-};
+const prisma = new PrismaClient();
 
 export async function POST(req: NextRequest) {
-  const prisma = new PrismaClient(); // Instantiate PrismaClient
   try {
     const session = await getServerSession(authOptions);
 
@@ -30,11 +19,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Input and brandId are required' }, { status: 400 });
     }
 
-    if (!process.env.GEMINI_API_KEY) {
-        return NextResponse.json({ error: 'API key not configured' }, { status: 500 });
+    const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+    if (!GEMINI_API_KEY) {
+      return NextResponse.json({ error: 'GEMINI_API_KEY not configured' }, { status: 500 });
     }
 
-    // Verify that the brand belongs to the logged-in user
+    // Verify the brand belongs to the user
     const existingBrand = await prisma.brand.findUnique({
       where: { id: brandId, userId: session.user.id },
     });
@@ -43,22 +33,52 @@ export async function POST(req: NextRequest) {
       return new NextResponse('Brand not found or unauthorized', { status: 404 });
     }
 
-    const truncatedInput = input.substring(0, 1000); // Truncate input to 1000 characters
-    const prompt = `Generate 4-5 catchy slogans for a brand described as: "${truncatedInput}". Return the response as a JSON array of strings.`;
+    // === Real Gemini API call ===
+    const response = await fetch(
+      'https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${GEMINI_API_KEY}`,
+        },
+        body: JSON.stringify({
+          contents: [
+            {
+              role: 'user',
+              parts: [
+                {
+                  text: `Generate 5 short, catchy branding slogans for: "${input}"`,
+                },
+              ],
+            },
+          ],
+        }),
+      }
+    );
 
-    const result = await callGeminiAPI(prompt);
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Gemini API error:', errorText);
+      return NextResponse.json({ error: 'Gemini API error', details: errorText }, { status: 500 });
+    }
 
-    // Update the brand in the database
-    await prisma.brand.update({
+    const data = await response.json();
+    const slogans =
+      data.candidates?.[0]?.content?.parts?.[0]?.text?.split('\n').filter(Boolean) ||
+      ['No slogans generated. Try again.'];
+
+    // Save slogans to database
+    const updatedBrand = await prisma.brand.update({
       where: { id: brandId },
-      data: {
-        slogans: result, // Store the array of slogans
-      },
+      data: { slogans },
     });
 
-    return NextResponse.json(result);
+    return NextResponse.json({ slogans: updatedBrand.slogans });
   } catch (error) {
-    console.error(error);
-    return NextResponse.json({ error: 'An unexpected error occurred.' }, { status: 500 });
+    console.error('Server error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } finally {
+    await prisma.$disconnect();
   }
 }
