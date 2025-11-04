@@ -1,9 +1,10 @@
-import { prisma } from '@/lib/db';
+import { PrismaClient } from '@prisma/client'; // Import PrismaClient
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/auth';
 
 export async function POST(req: Request) {
+  const prisma = new PrismaClient(); // Instantiate PrismaClient
   try {
     const session = await getServerSession(authOptions);
 
@@ -27,6 +28,7 @@ export async function POST(req: Request) {
 }
 
 export async function GET() {
+    const prisma = new PrismaClient(); // Instantiate PrismaClient
     try {
         const session = await getServerSession(authOptions);
 

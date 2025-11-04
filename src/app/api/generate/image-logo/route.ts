@@ -1,13 +1,14 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenerativeAI, Content } from "@google/generative-ai"; // Import Content
 import { NextResponse } from "next/server";
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/auth';
-import { prisma } from '@/lib/db'; // Import prisma
+import { PrismaClient } from '@prisma/client'; // Import PrismaClient
 
 // ✅ Load your Gemini API key from environment variables
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
 export async function POST(req: Request) {
+  const prisma = new PrismaClient(); // Instantiate PrismaClient
   try {
     const session = await getServerSession(authOptions);
 
@@ -46,25 +47,27 @@ export async function POST(req: Request) {
     // ✅ Call Gemini image generation model
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-    const result = await model.generateContent([
-      {
-        role: "user",
-        parts: [
-          {
-            text: prompt,
-          },
-        ],
-      },
-    ]);
+    const result = await model.generateContent({
+      contents: [
+        {
+          role: "user",
+          parts: [
+            {
+              text: prompt,
+            },
+          ],
+        },
+      ],
+    });
 
     // ✅ Extract image URL from the response
     const imagePart = result.response.candidates?.[0]?.content?.parts?.find(
       (p: any) => p.inlineData?.mimeType?.startsWith("image/")
     );
 
-    if (!imagePart) {
+    if (!imagePart || !imagePart.inlineData) { // Add check for inlineData
       return NextResponse.json(
-        { error: "No image was generated." },
+        { error: "No image was generated or inlineData is missing." }, // Update error message
         { status: 500 }
       );
     }

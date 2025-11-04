@@ -3,7 +3,7 @@ import { prisma } from '@/lib/db';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/auth';
 
-export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(req: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
     const session = await getServerSession(authOptions);
 
@@ -11,7 +11,7 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
       return new NextResponse('Unauthorized', { status: 401 });
     }
 
-    const userId = params.id;
+    const { id: userId } = await context.params;
 
     // Ensure the user is trying to delete their own account
     if (session.user.id !== userId) {

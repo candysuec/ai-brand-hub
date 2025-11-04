@@ -1,51 +1,48 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/db';
+import { PrismaClient } from '@prisma/client'; // Import PrismaClient
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/auth';
 
-export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(req: NextRequest, context: { params: Promise<{ id: string }> }) {
+  const { id } = await context.params;
+  const prisma = new PrismaClient(); // Instantiate PrismaClient
   try {
     const session = await getServerSession(authOptions);
 
-    if (!session || !session.user || !session.user.id) {
+    if (!session?.user?.id) {
       return new NextResponse('Unauthorized', { status: 401 });
     }
 
-    const brandId = params.id;
-
-    // Verify that the brand belongs to the logged-in user
-    const existingBrand = await prisma.brand.findUnique({
-      where: { id: brandId },
+    const brand = await prisma.brand.findUnique({
+      where: { id: id as string },
     });
 
-    if (!existingBrand) {
+    if (!brand) {
       return new NextResponse('Brand not found', { status: 404 });
     }
 
-    if (existingBrand.userId !== session.user.id) {
-      return new NextResponse('Unauthorized to delete this brand', { status: 403 });
+    if (brand.userId !== session.user.id) {
+      return new NextResponse('Forbidden', { status: 403 });
     }
 
-    await prisma.brand.delete({
-      where: { id: brandId },
-    });
-
-    return new NextResponse(null, { status: 204 }); // No Content
+    await prisma.brand.delete({ where: { id } });
+    return NextResponse.json({ message: 'Brand deleted successfully' });
   } catch (error) {
-    console.error('Error deleting brand:', error);
-    return NextResponse.json({ error: 'An unexpected error occurred.' }, { status: 500 });
+    console.error(error);
+    return new NextResponse('Internal Server Error', { status: 500 });
   }
 }
 
-export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(req: NextRequest, context: { params: Promise<{ id: string }> }) {
+  const { id } = await context.params;
+  const prisma = new PrismaClient(); // Instantiate PrismaClient
   try {
     const session = await getServerSession(authOptions);
 
-    if (!session || !session.user || !session.user.id) {
+    if (!session?.user?.id) {
       return new NextResponse('Unauthorized', { status: 401 });
     }
 
-    const brandId = params.id;
     const { name, description } = await req.json();
 
     if (!name || !description) {
@@ -54,7 +51,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
 
     // Verify that the brand belongs to the logged-in user
     const existingBrand = await prisma.brand.findUnique({
-      where: { id: brandId },
+      where: { id: id as string },
     });
 
     if (!existingBrand) {
@@ -62,17 +59,17 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     }
 
     if (existingBrand.userId !== session.user.id) {
-      return new NextResponse('Unauthorized to update this brand', { status: 403 });
+      return new NextResponse('Forbidden', { status: 403 });
     }
 
     const updatedBrand = await prisma.brand.update({
-      where: { id: brandId },
+      where: { id },
       data: { name, description },
     });
 
     return NextResponse.json(updatedBrand);
   } catch (error) {
     console.error('Error updating brand:', error);
-    return NextResponse.json({ error: 'An unexpected error occurred.' }, { status: 500 });
+    return new NextResponse('Internal Server Error', { status: 500 });
   }
 }

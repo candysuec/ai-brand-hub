@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/db';
+import { PrismaClient } from '@prisma/client'; // Import PrismaClient
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/auth';
 
@@ -14,6 +14,7 @@ const callGeminiAPI = async (prompt: string) => {
 };
 
 export async function POST(req: NextRequest) {
+  const prisma = new PrismaClient(); // Instantiate PrismaClient
   try {
     const session = await getServerSession(authOptions);
 
