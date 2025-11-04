@@ -5,6 +5,41 @@ import { authOptions } from '@/auth';
 
 const prisma = new PrismaClient();
 
+/**
+ * Calls the Gemini API to generate brand slogans.
+ */
+const callGeminiAPI = async (prompt: string) => {
+  try {
+    const response = await fetch(
+      "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=" +
+        process.env.GEMINI_API_KEY,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+        }),
+      }
+    );
+
+    const data = await response.json();
+
+    if (data.error) {
+      console.error("Gemini API error:", data.error);
+      throw new Error(data.error.message);
+    }
+
+    const output = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    return output ? [output] : ["No slogan generated."];
+  } catch (err) {
+    console.error("Gemini fetch failed:", err);
+    return ["Error generating slogan"];
+  }
+};
+
+/**
+ * POST handler to generate slogans for a given brand.
+ */
 export async function POST(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
@@ -16,15 +51,20 @@ export async function POST(req: NextRequest) {
     const { input, brandId } = await req.json();
 
     if (!input || !brandId) {
-      return NextResponse.json({ error: 'Input and brandId are required' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Input and brandId are required' },
+        { status: 400 }
+      );
     }
 
-    const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-    if (!GEMINI_API_KEY) {
-      return NextResponse.json({ error: 'GEMINI_API_KEY not configured' }, { status: 500 });
+    if (!process.env.GEMINI_API_KEY) {
+      return NextResponse.json(
+        { error: 'Gemini API key not configured' },
+        { status: 500 }
+      );
     }
 
-    // Verify the brand belongs to the user
+    // Verify that the brand belongs to the logged-in user
     const existingBrand = await prisma.brand.findUnique({
       where: { id: brandId, userId: session.user.id },
     });
@@ -33,51 +73,25 @@ export async function POST(req: NextRequest) {
       return new NextResponse('Brand not found or unauthorized', { status: 404 });
     }
 
-    // === Real Gemini API call ===
-    const response = await fetch(
-      'https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent',
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${GEMINI_API_KEY}`,
-        },
-        body: JSON.stringify({
-          contents: [
-            {
-              role: 'user',
-              parts: [
-                {
-                  text: `Generate 5 short, catchy branding slogans for: "${input}"`,
-                },
-              ],
-            },
-          ],
-        }),
-      }
-    );
+    // Create a short prompt for Gemini
+    const truncatedInput = input.slice(0, 200);
+    const prompt = `Create 3 short, catchy brand slogans for: ${truncatedInput}`;
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Gemini API error:', errorText);
-      return NextResponse.json({ error: 'Gemini API error', details: errorText }, { status: 500 });
-    }
+    const slogans = await callGeminiAPI(prompt);
 
-    const data = await response.json();
-    const slogans =
-      data.candidates?.[0]?.content?.parts?.[0]?.text?.split('\n').filter(Boolean) ||
-      ['No slogans generated. Try again.'];
-
-    // Save slogans to database
-    const updatedBrand = await prisma.brand.update({
+    // Save slogans in the database
+    await prisma.brand.update({
       where: { id: brandId },
       data: { slogans },
     });
 
-    return NextResponse.json({ slogans: updatedBrand.slogans });
+    return NextResponse.json({ slogans });
   } catch (error) {
-    console.error('Server error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    console.error("Slogan generation failed:", error);
+    return NextResponse.json(
+      { error: 'Failed to generate slogan' },
+      { status: 500 }
+    );
   } finally {
     await prisma.$disconnect();
   }
