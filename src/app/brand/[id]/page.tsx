@@ -6,7 +6,7 @@ import { useSession } from 'next-auth/react';
 import { Brand } from '@prisma/client';
 import { BrandIdentityGenerator } from '@/components/features/BrandIdentityGenerator';
 import { SloganGenerator } from '@/components/features/SloganGenerator';
-import { ColorPaletteGenerator } from '@/components/features/ColorPaletteGenerator';
+import ColorPaletteGenerator from '@/components/features/ColorPaletteGenerator';
 import { LogoIdeaGenerator } from '@/components/features/LogoIdeaGenerator';
 import { Button } from '@/components/ui/button'; // Import Button
 import { Input } from '@/components/ui/input'; // Import Input

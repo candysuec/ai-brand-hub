@@ -1,117 +1,60 @@
-'use client';
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Copy, ExternalLink } from 'lucide-react'; // Import ExternalLink icon
-import { Brand } from '@prisma/client';
-import { toast } from 'sonner'; // Import toast
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
+import { Copy, ExternalLink } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-
-interface Palette {
-  name: string;
-  colors: string[];
-}
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { useToast } from '@/components/ui/use-toast';
+import { Palette } from '@/types';
 
 interface ColorPaletteGeneratorProps {
-  brand: Brand;
+  brand: any;
 }
 
-export function ColorPaletteGenerator({ brand }: ColorPaletteGeneratorProps) {
-  const [keyword, setKeyword] = useState('');
+export default function ColorPaletteGenerator({ brand }: ColorPaletteGeneratorProps) {
   const [palettes, setPalettes] = useState<Palette[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
-  const [notionPageIdInput, setNotionPageIdInput] = useState(brand.notionPageId || '');
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [notionPageIdInput, setNotionPageIdInput] = useState('');
+  const { toast } = useToast();
 
   useEffect(() => {
-    if (brand.colorPalettes) {
-      setPalettes(brand.colorPalettes as Palette[]);
+    const palettesData = brand.colorPalettes as unknown;
+    if (Array.isArray(palettesData)) {
+      setPalettes(palettesData as Palette[]);
     } else {
       setPalettes([]);
     }
-    setNotionPageIdInput(brand.notionPageId || '');
-  }, [brand]);
+  }, [brand.colorPalettes]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!keyword) return;
-    setIsLoading(true);
-    setPalettes([]);
-
-    try {
-      const truncatedKeyword = keyword.substring(0, 1000); // Truncate input to 1000 characters
-      const response = await fetch('/api/generate/colors', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ input: truncatedKeyword, brandId: brand.id }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to generate color palettes.');
-      }
-
-      const data = await response.json();
-      setPalettes(data);
-    } catch (error) {
-      console.error(error);
-      toast.error('Failed to generate color palettes.');
-      // Handle error state in the UI
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleCopy = (text: string, type: string) => {
-    navigator.clipboard.writeText(text);
-    toast.success(`${type} copied to clipboard!`);
+  const handleCopy = (color: string, label: string) => {
+    navigator.clipboard.writeText(color);
+    toast({
+      description: `${label} copied to clipboard!`,
+    });
   };
 
   const handleExportToNotion = async () => {
+    if (!notionPageIdInput) return;
     setIsExporting(true);
     try {
-      const formattedPalettes = palettes.map(p => `${p.name}: ${p.colors.join(', ')}`).join('\n');
-      const response = await fetch('/api/export/notion', {
+      const response = await fetch('/api/export-to-notion', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          brandId: brand.id,
           notionPageId: notionPageIdInput,
-          content: {
-            type: 'Color Palettes',
-            data: formattedPalettes,
-          },
+          palettes,
         }),
       });
-
-      if (!response.ok) {
-        throw new Error('Failed to export color palettes to Notion.');
+      if (response.ok) {
+        toast({ description: 'Exported successfully to Notion!' });
+      } else {
+        toast({ description: 'Failed to export to Notion.' });
       }
-
-      const data = await response.json();
-      toast.success('Color palettes exported to Notion!');
-      if (data.notionPageId) {
-        setNotionPageIdInput(data.notionPageId); // Update if a new page was created
-        window.open(`https://www.notion.so/${data.notionPageId.replace(/-/g, '')}`, '_blank');
-      }
-      setIsDialogOpen(false); // Close dialog on success
     } catch (error) {
       console.error(error);
-      toast.error('Failed to export color palettes to Notion.');
+      toast({ description: 'An error occurred while exporting.' });
     } finally {
       setIsExporting(false);
     }
@@ -121,49 +64,29 @@ export function ColorPaletteGenerator({ brand }: ColorPaletteGeneratorProps) {
     <Card>
       <CardHeader>
         <CardTitle>Color Palette Generator</CardTitle>
-        <CardDescription>
-          Select a keyword to generate color palettes that match the mood of your brand.
-        </CardDescription>
+        <CardDescription>Generate and manage color palettes for your brand.</CardDescription>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="flex items-center gap-4">
-          <Select onValueChange={setKeyword} value={keyword}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select a keyword" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="bold">Bold</SelectItem>
-              <SelectItem value="calm">Calm</SelectItem>
-              <SelectItem value="techy">Techy</SelectItem>
-            </SelectContent>
-          </Select>
-          <div className="flex justify-between w-full">
-            <Button type="submit" disabled={isLoading || !keyword}>
-              {isLoading ? 'Generating...' : 'Generate'}
-            </Button>
-            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <form className="space-y-4">
+          <div className="flex flex-col sm:flex-row gap-4">
+            <Dialog>
               <DialogTrigger asChild>
-                <Button variant="outline" disabled={palettes.length === 0 || isLoading || isExporting}>
-                  <ExternalLink className="mr-2 h-4 w-4" /> Export to Notion
-                </Button>
+                <Button variant="outline">Export to Notion</Button>
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
-                  <DialogTitle>Export Color Palettes to Notion</DialogTitle>
-                  <DialogDescription>
-                    Enter an existing Notion page ID to update, or leave blank to create a new page.
-                  </DialogDescription>
+                  <DialogTitle>Export Palettes to Notion</DialogTitle>
                 </DialogHeader>
                 <div className="space-y-4">
                   <div>
-                    <label htmlFor="notionPageId" className="block text-sm font-medium mb-1">
+                    <label htmlFor="notionPageId" className="block text-sm font-medium text-gray-700">
                       Notion Page ID (Optional)
                     </label>
                     <Input
                       id="notionPageId"
                       value={notionPageIdInput}
                       onChange={(e) => setNotionPageIdInput(e.target.value)}
-                      placeholder="e.g., a1b2c3d4e5f6..."
+                      placeholder="e.g., a1b2c3d4e5f6"
                     />
                   </div>
                   <Button onClick={handleExportToNotion} disabled={isExporting}>
