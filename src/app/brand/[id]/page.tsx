@@ -45,7 +45,7 @@ export default function BrandPage({ params }: { params: { id: string } }) {
   const [editDescription, setEditDescription] = useState(''); // New state for editing description
   const router = useRouter();
   const { data: session, status } = useSession();
-	const { id } = use(params);
+	import { useParams } from 'next/navigation';// later in the component:const params = useParams<{ id: string }>();const id = params.id;
   useEffect(() => {
     if (status === 'loading') return;
 
