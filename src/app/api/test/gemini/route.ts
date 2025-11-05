@@ -1,36 +1,34 @@
-import { NextResponse } from 'next/server';
+import { NextResponse } from "next/server";
 
-export async function POST(req: Request) {
+export async function GET() {
   const apiKey = process.env.GEMINI_API_KEY;
+
   if (!apiKey) {
-    return NextResponse.json({ error: 'GEMINI_API_KEY not configured' }, { status: 500 });
+    return NextResponse.json(
+      { error: "Missing GEMINI_API_KEY" },
+      { status: 500 }
+    );
   }
 
   try {
-    const { prompt } = await req.json();
-
+    // Simple connection test with Gemini API
     const response = await fetch(
-      'https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent',
+      "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" + apiKey,
       {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-goog-api-key': apiKey,
-        },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt || 'Hello Gemini!' }] }],
+          contents: [{ parts: [{ text: "Hello Gemini" }] }],
         }),
       }
     );
 
     const data = await response.json();
     return NextResponse.json(data);
-  } catch (err: any) {
-    console.error('[GEMINI_POST_ERROR]', err);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch (error) {
+    return NextResponse.json(
+      { error: "Request failed", details: (error as Error).message },
+      { status: 500 }
+    );
   }
-}
-
-export async function GET() {
-  return NextResponse.json({ message: 'Gemini test endpoint is live!' });
 }
