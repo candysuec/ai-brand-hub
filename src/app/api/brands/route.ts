@@ -18,72 +18,46 @@ export async function POST(req: NextRequest) {
         where: { email: session.user.email },
         select: { id: true },
       });
-      userId = userRecord?.id || null;
+      // ✅ Use undefined instead of null to avoid TypeScript error
+      userId = userRecord?.id ?? undefined;
     }
 
+    // If still no userId, return error
     if (!userId) {
       return NextResponse.json(
-        { error: "Unauthorized — user not found or missing ID" },
+        { error: "User not authenticated or not found" },
         { status: 401 }
       );
     }
 
-    const { name, description } = await req.json();
+    // Parse the request body
+    const body = await req.json();
+    const { name, description } = body;
 
-    if (!name || !description) {
+    if (!name) {
       return NextResponse.json(
-        { error: "Name and description are required" },
+        { error: "Brand name is required" },
         { status: 400 }
       );
     }
 
-    const brand = await prisma.brand.create({
+    // Create the brand in the database
+    const newBrand = await prisma.brand.create({
       data: {
         name,
-        description,
+        description: description || "",
         userId,
       },
     });
 
-    return NextResponse.json({ success: true, brand });
+    return NextResponse.json(newBrand, { status: 201 });
   } catch (error: any) {
-    console.error("[BRANDS_POST]", error);
+    console.error("Error creating brand:", error);
     return NextResponse.json(
-      { error: error.message || "Internal Server Error" },
+      { error: "An error occurred while creating the brand." },
       { status: 500 }
     );
-  }
-}
-
-export async function GET() {
-  try {
-    const session = await getServerSession(authOptions);
-    console.log("Session data:", session);
-
-    // Try to get userId from session, fallback to lookup by email
-    let userId = session?.user?.id;
-
-    if (!userId && session?.user?.email) {
-      const userRecord = await prisma.user.findUnique({
-        where: { email: session.user.email },
-        select: { id: true },
-      });
-      userId = userRecord?.id || null;
-    }
-
-    if (!userId) {
-      // Always return an empty array so UI doesn't crash
-      return NextResponse.json([]);
-    }
-
-    const brands = await prisma.brand.findMany({
-      where: { userId },
-      orderBy: { createdAt: "desc" },
-    });
-
-    return NextResponse.json(brands);
-  } catch (error: any) {
-    console.error("[BRANDS_GET]", error);
-    return NextResponse.json([]);
+  } finally {
+    await prisma.$disconnect();
   }
 }
