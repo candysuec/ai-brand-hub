@@ -31,7 +31,7 @@ export function Sidebar() {
         </h2>
         {error && <div>Failed to load brands</div>}
         {!brands && !error && <div>Loading...</div>}
-        {brands?.map((brand) => (
+        {Array.isArray(brands) && brands.map((brand) => (
           <Button
             key={brand.id}
             asChild
