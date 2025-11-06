@@ -3,38 +3,22 @@ import { PrismaClient } from '@prisma/client';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/auth';
 
+import { GoogleGenerativeAI } from '@google/generative-ai';
+
 const prisma = new PrismaClient();
 
 /**
  * Calls the Gemini API to generate brand slogans.
  */
 const callGeminiAPI = async (prompt: string) => {
-  try {
-    const response = await fetch(
-      "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=" +
-        process.env.GEMINI_API_KEY,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-        }),
-      }
-    );
+  const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
+  const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro-latest" }, { apiVersion: 'v1beta' });
 
-    const data = await response.json();
-
-    if (data.error) {
-      console.error("Gemini API error:", data.error);
-      throw new Error(data.error.message);
-    }
-
-    const output = data.candidates?.[0]?.content?.parts?.[0]?.text;
-    return output ? [output] : ["No slogan generated."];
-  } catch (err) {
-    console.error("Gemini fetch failed:", err);
-    return ["Error generating slogan"];
-  }
+  const result = await model.generateContent(prompt);
+  const response = await result.response;
+  const text = await response.text();
+  console.log("Raw Gemini slogan response text:", text);
+  return text.split('\n').filter(slogan => slogan.trim() !== '');
 };
 
 /**

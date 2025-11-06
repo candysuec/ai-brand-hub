@@ -5,7 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Copy, ExternalLink } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { useToast } from '@/components/ui/use-toast';
+import { toast } from 'sonner';
 import { Palette } from '@/types';
 
 interface ColorPaletteGeneratorProps {
@@ -17,7 +17,7 @@ export default function ColorPaletteGenerator({ brand }: ColorPaletteGeneratorPr
   const [isLoading, setIsLoading] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [notionPageIdInput, setNotionPageIdInput] = useState('');
-  const { toast } = useToast();
+  
 
   useEffect(() => {
     const palettesData = brand.colorPalettes as unknown;
@@ -30,16 +30,14 @@ export default function ColorPaletteGenerator({ brand }: ColorPaletteGeneratorPr
 
   const handleCopy = (color: string, label: string) => {
     navigator.clipboard.writeText(color);
-    toast({
-      description: `${label} copied to clipboard!`,
-    });
+    toast.success(`${label} copied to clipboard!`);
   };
 
   const handleExportToNotion = async () => {
     if (!notionPageIdInput) return;
     setIsExporting(true);
     try {
-      const response = await fetch('/api/export-to-notion', {
+      const response = await fetch('/api/export/notion', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -48,13 +46,13 @@ export default function ColorPaletteGenerator({ brand }: ColorPaletteGeneratorPr
         }),
       });
       if (response.ok) {
-        toast({ description: 'Exported successfully to Notion!' });
+        toast.success('Exported successfully to Notion!');
       } else {
-        toast({ description: 'Failed to export to Notion.' });
+        toast.error('Failed to export to Notion.');
       }
     } catch (error) {
       console.error(error);
-      toast({ description: 'An error occurred while exporting.' });
+      toast.error('An error occurred while exporting.');
     } finally {
       setIsExporting(false);
     }

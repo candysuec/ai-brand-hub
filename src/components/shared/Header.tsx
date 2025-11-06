@@ -28,7 +28,7 @@ export function Header() {
             <Button onClick={() => signOut()}>Sign Out</Button>
           </>
         ) : (
-          <Button onClick={() => signIn('google')}>Sign In</Button>
+          <Button onClick={() => signIn('google', { callbackUrl: '/' })}>Sign In</Button>
         )}
       </div>
     </header>

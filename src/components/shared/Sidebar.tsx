@@ -19,7 +19,7 @@ export function Sidebar() {
     <aside className="w-64 border-r p-4 flex-shrink-0 flex flex-col">
       <div className="mb-4">
         <Button asChild className="w-full">
-          <Link href="/">
+          <Link href="/brands/new">
             <PlusCircle className="mr-2 h-4 w-4" />
             New Brand
           </Link>

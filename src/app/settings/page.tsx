@@ -98,6 +98,21 @@ export default function SettingsPage() {
           </div>
         </CardContent>
       </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Future Features</CardTitle>
+          <CardDescription>Exciting new integrations and functionalities coming soon!</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2">
+            <h3 className="text-lg font-semibold">Notion Integration</h3>
+            <p className="text-muted-foreground">
+              We're working on integrating with Notion to allow you to export your generated brand assets and ideas directly to your Notion workspaces. Stay tuned for updates!
+            </p>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

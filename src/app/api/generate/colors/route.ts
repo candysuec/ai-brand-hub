@@ -3,14 +3,17 @@ import { PrismaClient } from '@prisma/client'; // Import PrismaClient
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/auth';
 
+import { GoogleGenerativeAI } from '@google/generative-ai';
+
 // This is a placeholder for the actual Gemini API client.
 const callGeminiAPI = async (prompt: string) => {
-  await new Promise(resolve => setTimeout(resolve, 1500));
-  const mockApiResponse = [
-    { name: 'Crimson & Onyx', colors: ['#DC143C', '#353839', '#FFFFFF'] },
-    { name: 'Electric Blue & Charcoal', colors: ['#7DF9FF', '#36454F', '#F5F5F5'] },
-  ];
-  return mockApiResponse;
+  const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
+  const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro-latest" }, { apiVersion: 'v1beta' });
+
+  const result = await model.generateContent(prompt);
+  const response = await result.response;
+  const text = await response.text();
+  return JSON.parse(text);
 };
 
 export async function POST(req: NextRequest) {

@@ -45,7 +45,7 @@ export async function POST(req: Request) {
     `;
 
     // ✅ Call Gemini image generation model
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro-latest" }, { apiVersion: 'v1beta' });
 
     const result = await model.generateContent({
       contents: [

@@ -137,9 +137,9 @@ export default function BrandPage() {
   }
 
   return (
-    <div className="space-y-8">
-      <div className="mb-8 flex justify-between items-center">
-        <div>
+    <div className="flex gap-8">
+      <div className="w-1/3 space-y-8">
+        <div className="mb-8">
           <h1 className="text-3xl font-bold">{brand.name}</h1>
           <p className="text-lg text-muted-foreground">{brand.description}</p>
         </div>
@@ -229,11 +229,12 @@ export default function BrandPage() {
           </AlertDialog>
         </div>
       </div>
-
-      <BrandIdentityGenerator brand={brand} />
-      <SloganGenerator brand={brand} />
-      <ColorPaletteGenerator brand={brand} />
-      <LogoIdeaGenerator brand={brand} />
+      <div className="w-2/3 space-y-8">
+        <BrandIdentityGenerator brand={brand} />
+        <SloganGenerator brand={brand} />
+        <ColorPaletteGenerator brand={brand} />
+        <LogoIdeaGenerator brand={brand} />
+      </div>
     </div>
   );
 }

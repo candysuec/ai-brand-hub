@@ -7,12 +7,22 @@ export async function GET(req: NextRequest, context: { params: Promise<{ id: str
   const { id } = await context.params;
   const prisma = new PrismaClient();
   try {
+    const session = await getServerSession(authOptions);
+
+    if (!session?.user?.id) {
+      return new NextResponse('Unauthorized', { status: 401 });
+    }
+
     const brand = await prisma.brand.findUnique({
       where: { id: id as string },
     });
 
     if (!brand) {
       return new NextResponse('Brand not found', { status: 404 });
+    }
+
+    if (brand.userId !== session.user.id) {
+      return new NextResponse('Forbidden', { status: 403 });
     }
 
     return NextResponse.json(brand);
