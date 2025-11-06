@@ -3,6 +3,25 @@ import { PrismaClient } from '@prisma/client'; // Import PrismaClient
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/auth';
 
+export async function GET(req: NextRequest, context: { params: Promise<{ id: string }> }) {
+  const { id } = await context.params;
+  const prisma = new PrismaClient();
+  try {
+    const brand = await prisma.brand.findUnique({
+      where: { id: id as string },
+    });
+
+    if (!brand) {
+      return new NextResponse('Brand not found', { status: 404 });
+    }
+
+    return NextResponse.json(brand);
+  } catch (error) {
+    console.error(error);
+    return new NextResponse('Internal Server Error', { status: 500 });
+  }
+}
+
 export async function DELETE(req: NextRequest, context: { params: Promise<{ id: string }> }) {
   const { id } = await context.params;
   const prisma = new PrismaClient(); // Instantiate PrismaClient

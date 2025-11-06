@@ -5,6 +5,45 @@ import { authOptions } from "@/auth"; // adjust if your auth file is in a differ
 
 const prisma = new PrismaClient();
 
+export async function GET(req: NextRequest) {
+  try {
+    const session = await getServerSession(authOptions);
+
+    let userId = session?.user?.id;
+
+    if (!userId && session?.user?.email) {
+      const userRecord = await prisma.user.findUnique({
+        where: { email: session.user.email },
+        select: { id: true },
+      });
+      userId = userRecord?.id ?? undefined;
+    }
+
+    if (!userId) {
+      return NextResponse.json(
+        { error: "User not authenticated or not found" },
+        { status: 401 }
+      );
+    }
+
+    const brands = await prisma.brand.findMany({
+      where: {
+        userId: userId,
+      },
+    });
+
+    return NextResponse.json(brands, { status: 200 });
+  } catch (error: any) {
+    console.error("Error fetching brands:", error);
+    return NextResponse.json(
+      { error: "An error occurred while fetching brands." },
+      { status: 500 }
+    );
+  } finally {
+    await prisma.$disconnect();
+  }
+}
+
 export async function POST(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
