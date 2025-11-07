@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, Wrench, Lock } from "lucide-react";
+import { RefreshCw, Wrench, Lock, FileText, BookOpen, Code, HardDrive, Zap } from "lucide-react";
 import DailySummaryButton from "@/components/DailySummaryButton";
 import SelfRepairTrend from "@/components/SelfRepairTrend";
 import WeeklyRollupCard from "@/components/WeeklyRollupCard";
@@ -99,9 +99,11 @@ export default function SelfRepairDashboard() {
   const SectionCard = ({
     title,
     body,
+    icon,
   }: {
     title: string;
     body: React.ReactNode;
+    icon?: React.ReactNode; // Optional icon prop
   }) => (
     <motion.div
       initial={{ opacity: 0, y: 15 }}
@@ -109,8 +111,13 @@ export default function SelfRepairDashboard() {
       transition={{ duration: 0.4 }}
     >
       <Card className="shadow-sm border rounded-2xl mb-4">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 px-5 bg-gray-50 border-b rounded-t-2xl">
+          <h2 className="text-lg font-semibold flex items-center gap-2">
+            {icon && <span className="text-gray-500">{icon}</span>}
+            {title}
+          </h2>
+        </CardHeader>
         <CardContent className="p-5 space-y-2">
-          <h2 className="text-xl font-semibold">{title}</h2>
           {body}
         </CardContent>
       </Card>
@@ -158,14 +165,16 @@ export default function SelfRepairDashboard() {
           <LastAlertPanel />
 
           <SectionCard
-            title="📜 Event Log"
+            title="Event Log"
+            icon={<FileText className="h-5 w-5" />} // Added icon
             body={
               <LogPanel />
             }
           />
 
           <SectionCard
-            title="🧾 Overview"
+            title="Overview"
+            icon={<BookOpen className="h-5 w-5" />} // Added icon
             body={
               <div className="space-y-1">
                 <p>
@@ -182,7 +191,8 @@ export default function SelfRepairDashboard() {
           />
 
           <SectionCard
-            title="🧩 Codebase Check"
+            title="Codebase Check"
+            icon={<Code className="h-5 w-5" />} // Added icon
             body={
               <div className="space-y-2">
                 <p
@@ -214,7 +224,8 @@ export default function SelfRepairDashboard() {
           />
 
           <SectionCard
-            title="🔑 Environment Check"
+            title="Environment Check"
+            icon={<HardDrive className="h-5 w-5" />} // Added icon
             body={
               <div className="space-y-1">
                 <p>
@@ -237,7 +248,8 @@ export default function SelfRepairDashboard() {
           />
 
           <SectionCard
-            title="⚙️ SDK Health"
+            title="SDK Health"
+            icon={<Zap className="h-5 w-5" />} // Added icon
             body={
               <div className="space-y-1">
                 <p>
