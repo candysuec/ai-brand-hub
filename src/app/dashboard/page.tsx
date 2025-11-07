@@ -3,16 +3,16 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useRouter } from "next/navigation";
+import { useRouter } => "next/navigation";
 import DashboardLayout from "@/components/shared/DashboardLayout";
-import { PlusCircle } from "lucide-react"; // Import PlusCircle icon
+import { PlusCircle, LayoutDashboard } from "lucide-react"; // Import LayoutDashboard icon
 
 export default function DashboardPage() {
   const [brands, setBrands] = useState<any[]>([
-    // { id: "mock-1", name: "Mock Brand Alpha", description: "AI-powered branding for startups." },
-    // { id: "mock-2", name: "Mock Brand Beta", description: "Innovative marketing solutions." },
-    // { id: "mock-3", name: "Mock Brand Gamma", description: "Next-gen brand identity." },
-  ]); // Empty mock data to test empty state
+    { id: "mock-1", name: "Mock Brand Alpha", description: "AI-powered branding for startups." },
+    { id: "mock-2", name: "Mock Brand Beta", description: "Innovative marketing solutions." },
+    { id: "mock-3", name: "Mock Brand Gamma", description: "Next-gen brand identity." },
+  ]); // Added mock data back to test card styling
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
@@ -65,12 +65,13 @@ export default function DashboardPage() {
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {brands.map((brand) => (
               <Card key={brand.id} className="shadow-sm hover:shadow-md transition-shadow">
-                <CardHeader>
-                  <CardTitle>{brand.name}</CardTitle>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2"> {/* Modified CardHeader */}
+                  <CardTitle className="text-lg font-semibold">{brand.name}</CardTitle>
+                  <LayoutDashboard className="h-5 w-5 text-gray-400" /> {/* Added icon */}
                 </CardHeader>
                 <CardContent>
-                  <p className="text-gray-600">{brand.description}</p>
-                  <Button variant="link" className="p-0 mt-2" onClick={() => router.push(`/brand/${brand.id}`)}>
+                  <p className="text-gray-600 mb-4">{brand.description}</p> {/* Added mb-4 */}
+                  <Button onClick={() => router.push(`/brand/${brand.id}`)}> {/* Changed variant to default */}
                     View Brand Details
                   </Button>
                 </CardContent>
