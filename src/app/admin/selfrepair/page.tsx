@@ -22,64 +22,72 @@ interface SelfRepairReport {
 }
 
 export default function SelfRepairDashboard() {
-  const [data, setData] = useState<SelfRepairReport | null>(null);
+  const [data, setData] = useState<SelfRepairReport | null>({
+    timestamp: new Date().toLocaleString(),
+    mode: "development",
+    overall: "✅ All systems nominal",
+    checks: {
+      codebase: { message: "✅ No deprecated references found", deprecatedReferences: 0 },
+      environment: { file: ".env.local", message: "✅ All required environment variables set" },
+      sdk: { version: "0.24.1", message: "✅ SDK connected", response: "Gemini 2.5 Flash" },
+    },
+  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [authorized, setAuthorized] = useState(false);
+  const [authorized, setAuthorized] = useState(true); // Temporarily set to true
   const [keyInput, setKeyInput] = useState("");
 
-  // --- Load saved key on mount ---
-  useEffect(() => {
-    const storedKey = localStorage.getItem("adminKey");
-    if (storedKey) {
-      setAuthorized(true);
-      fetchReport(false, storedKey);
-    }
-  }, []);
+  // Comment out useEffect to prevent API call and login logic while using mock data
+  // useEffect(() => {
+  //   const storedKey = localStorage.getItem("adminKey");
+  //   if (storedKey) {
+  //     setAuthorized(true);
+  //     fetchReport(false, storedKey);
+  //   }
+  // }, []);
 
-  // --- Core fetcher ---
-  const fetchReport = async (repair = false, key?: string) => {
-    const token = key || localStorage.getItem("adminKey");
-    if (!token) {
-      setError("No admin key found");
-      return;
-    }
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await fetch(
-        `/api/generate/selfrepair${repair ? "?repair=true" : ""}`,
-        {
-          cache: "no-store",
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-      if (res.status === 401) throw new Error("Unauthorized — invalid admin key");
-      const json = await res.json();
-      setData(json);
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Comment out fetchReport, handleLogin, handleLogout for mock data
+  // const fetchReport = async (repair = false, key?: string) => {
+  //   const token = key || localStorage.getItem("adminKey");
+  //   if (!token) {
+  //     setError("No admin key found");
+  //     return;
+  //   }
+  //   setLoading(true);
+  //   setError(null);
+  //   try {
+  //     const res = await fetch(
+  //       `/api/generate/selfrepair${repair ? "?repair=true" : ""}`,
+  //       {
+  //         cache: "no-store",
+  //         headers: { Authorization: `Bearer ${token}` },
+  //       }
+  //     );
+  //     if (res.status === 401) throw new Error("Unauthorized — invalid admin key");
+  //     const json = await res.json();
+  //     setData(json);
+  //   } catch (err: any) {
+  //     setError(err.message);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
-  // --- Handle login ---
-  const handleLogin = () => {
-    if (!keyInput.trim()) {
-      setError("Please enter your admin key.");
-      return;
-    }
-    localStorage.setItem("adminKey", keyInput.trim());
-    setAuthorized(true);
-    fetchReport(false, keyInput.trim());
-  };
+  // const handleLogin = () => {
+  //   if (!keyInput.trim()) {
+  //     setError("Please enter your admin key.");
+  //     return;
+  //   }
+  //   localStorage.setItem("adminKey", keyInput.trim());
+  //   setAuthorized(true);
+  //   fetchReport(false, keyInput.trim());
+  // };
 
-  const handleLogout = () => {
-    localStorage.removeItem("adminKey");
-    setAuthorized(false);
-    setData(null);
-  };
+  // const handleLogout = () => {
+  //   localStorage.removeItem("adminKey");
+  //   setAuthorized(false);
+  //   setData(null);
+  // };
 
   const statusColor = (msg: string) => {
     if (msg.includes("✅")) return "text-green-600";
@@ -112,35 +120,39 @@ export default function SelfRepairDashboard() {
   // === LOGIN SCREEN ===
   if (!authorized) {
     return (
-      <main className="flex flex-col items-center justify-center min-h-screen p-6">
-        <motion.div
-          initial={{ opacity: 0, y: 15 }}
-          animate={{ opacity: 1, y: 0 }} 
-          transition={{ duration: 0.4 }}
-        >
-          <Card className="p-6 w-96 text-center space-y-4">
-            <Lock className="h-8 w-8 mx-auto text-gray-500" />
-            <h1 className="text-2xl font-bold">Admin Login</h1>
-            <p className="text-gray-600 text-sm">
-              Enter your <code>ADMIN_ACCESS_KEY</code> to access the dashboard.
-            </p>
-            <input
-              type="password"
-              value={keyInput}
-              onChange={(e) => setKeyInput(e.target.value)}
-              placeholder="Enter Admin Key"
-              className="w-full border rounded-lg p-2 text-center outline-none focus:ring focus:ring-blue-300"
-            />
-            <Button onClick={handleLogin} className="w-full">
-              Unlock Dashboard
-            </Button>
-            {error && <p className="text-red-600 text-sm">{error}</p>}
-          </Card>
-        </motion.div>
-      </main>
+      <DashboardLayout> {/* Changed from <main> to DashboardLayout */}
+        <div className="flex flex-col items-center justify-center p-6"> {/* Removed min-h-screen */}
+          <motion.div
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }} 
+            transition={{ duration: 0.4 }}
+          >
+            <Card className="p-6 w-96 text-center space-y-4">
+              <Lock className="h-8 w-8 mx-auto text-gray-500" />
+              <h1 className="text-2xl font-bold">Admin Login</h1>
+              <p className="text-gray-600 text-sm">
+                Enter your <code>ADMIN_ACCESS_KEY</code> to access the dashboard.
+              </p>
+              <input
+                type="password"
+                value={keyInput}
+                onChange={(e) => setKeyInput(e.target.value)}
+                placeholder="Enter Admin Key"
+                className="w-full border rounded-lg p-2 text-center outline-none focus:ring focus:ring-blue-300"
+              />
+              <Button onClick={handleLogin} className="w-full">
+                Unlock Dashboard
+              </Button>
+              {error && <p className="text-red-600 text-sm">{error}</p>}
+            </Card>
+          </motion.div>
+        </div>
+      </DashboardLayout> // Closed DashboardLayout
     );
   }
 
+  return (
+    <DashboardLayout> {/* Changed from <main> to DashboardLayout */}
       {data && (
         <>
           <LastAlertPanel />
@@ -244,7 +256,7 @@ export default function SelfRepairDashboard() {
           />
         </>
       )}
-    </main>
+    </DashboardLayout> // Closed DashboardLayout
   );
 }
 
