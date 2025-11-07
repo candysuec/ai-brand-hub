@@ -53,7 +53,7 @@ export function BrandIdentityGenerator({ brand }: BrandIdentityGeneratorProps) {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ input, brandId: brand.id }),
+        body: JSON.stringify({ brandDescription: input, brandId: brand.id }),
       });
 
       if (!response.ok) {

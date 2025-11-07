@@ -1,11 +1,9 @@
-import { GoogleGenerativeAI, Content } from "@google/generative-ai"; // Import Content
-import { NextResponse } from "next/server";
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/auth';
-import { PrismaClient } from '@prisma/client'; // Import PrismaClient
+import { GoogleGenAI, Content } from "@google/genai"; // Import Content
 
 // ✅ Load your Gemini API key from environment variables
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+const genAI = new GoogleGenAI({
+  apiKey: process.env.GEMINI_API_KEY!,
+});
 
 export async function POST(req: Request) {
   const prisma = new PrismaClient(); // Instantiate PrismaClient
@@ -45,7 +43,7 @@ export async function POST(req: Request) {
     `;
 
     // ✅ Call Gemini image generation model
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro-latest" }, { apiVersion: 'v1beta' });
+    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
     const result = await model.generateContent({
       contents: [
