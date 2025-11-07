@@ -1,5 +1,8 @@
 {
   "crons": [
-    { "path": "/api/generate/selfrepair/cron/unified", "schedule": "0 * * * *" }
+    {
+      "path": "/api/generate/selfrepair/cron/unified",
+      "schedule": "0 0 * * *"
+    }
   ]
 }
