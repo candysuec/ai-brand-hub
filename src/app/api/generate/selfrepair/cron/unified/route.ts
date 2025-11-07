@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { runSelfRepair } from "@/lib/selfrepair";
 import { sendDailySummary } from "@/lib/daily";
+import { sendWeeklySummary } from "@/lib/weekly";
 import { archiveLogs, pruneLogs } from "@/lib/logs";
 
 export const runtime = "nodejs";
@@ -12,6 +13,7 @@ export const runtime = "nodejs";
  * - Performs hourly self-repair (now daily).
  * - Performs daily summary & email.
  * - Archives and prunes logs.
+ * - Performs weekly summary & email (on Sundays).
  */
 export async function GET() {
   try {
@@ -26,6 +28,12 @@ export async function GET() {
 
     // 3️⃣ Send daily summary
     await sendDailySummary();
+
+    // 4️⃣ Send weekly summary (on Sundays)
+    const today = new Date();
+    if (today.getDay() === 0) { // Sunday is 0
+      await sendWeeklySummary();
+    }
 
     console.log("✅ Daily maintenance cycle complete");
     return NextResponse.json({ ok: true, ranDaily: true });

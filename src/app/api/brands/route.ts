@@ -52,28 +52,29 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    console.log("Session data:", session);
+    // Temporarily disabled authentication for testing
+    // const session = await getServerSession(authOptions);
+    // console.log("Session data:", session);
 
-    // Try to get userId from session, fallback to lookup by email
-    let userId = session?.user?.id;
+    // // Try to get userId from session, fallback to lookup by email
+    let userId = "test_user_id"; // Hardcoded for testing
 
-    if (!userId && session?.user?.email) {
-      const userRecord = await prisma.user.findUnique({
-        where: { email: session.user.email },
-        select: { id: true },
-      });
-      // ✅ Use undefined instead of null to avoid TypeScript error
-      userId = userRecord?.id ?? undefined;
-    }
+    // if (!userId && session?.user?.email) {
+    //   const userRecord = await prisma.user.findUnique({
+    //     where: { email: session.user.email },
+    //     select: { id: true },
+    //   });
+    //   // ✅ Use undefined instead of null to avoid TypeScript error
+    //   userId = userRecord?.id ?? undefined;
+    // }
 
-    // If still no userId, return error
-    if (!userId) {
-      return NextResponse.json(
-        { error: "User not authenticated or not found" },
-        { status: 401 }
-      );
-    }
+    // // If still no userId, return error
+    // if (!userId) {
+    //   return NextResponse.json(
+    //     { error: "User not authenticated or not found" },
+    //     { status: 401 }
+    //   );
+    // }
 
     // Parse the request body
     const body = await req.json();

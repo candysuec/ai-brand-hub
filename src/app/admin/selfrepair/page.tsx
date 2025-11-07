@@ -141,108 +141,16 @@ export default function SelfRepairDashboard() {
     );
   }
 
-{/* === Event Log Panel === */}
-<SectionCard
-  title="📜 Event Log"
-  body={
-    <LogPanel />
-  }
-/>
-
-  // === DASHBOARD ===
-  return (
-    <main className="p-6 max-w-4xl mx-auto space-y-4">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-bold">🧠 Gemini Self-Repair Dashboard</h1>
-        <p className="text-xs text-gray-500">
-          🔄 Hourly watchdog active — auto-checks for session errors.
-        </p>
-        <div className="flex gap-2">
-          <Button
-            onClick={() => fetchReport()}
-            disabled={loading}
-            variant="outline"
-          >
-            <RefreshCw className="h-4 w-4 mr-2" /> Refresh
-          </Button>
-          <Button
-            onClick={() => fetchReport(true)}
-            disabled={loading}
-            variant="default"
-          >
-            <Wrench className="h-4 w-4 mr-2" /> Auto-Repair
-          </Button>
-          <Button
-            onClick={handleLogout}
-            variant="destructive"
-            disabled={loading}
-          >
-            Logout
-          </Button>
-          <Button
-            onClick={async () => {
-              try {
-                const res = await fetch("/api/generate/selfrepair/alert-test", {
-                  headers: {
-                    Authorization: `Bearer ${localStorage.getItem("adminKey")}`,
-                  },
-                });
-                const data = await res.json();
-                if (data.success) {
-                  alert(`✅ Test alert sent via ${data.provider} to ${data.sentTo}`);
-                } else {
-                  alert(`⚠️ Failed: ${data.error || "Unknown error"}`);
-                }
-              } catch (err) {
-                alert("⚠️ Error sending test alert: " + (err as Error).message);
-              }
-            }}
-            variant="outline"
-          >
-            Send Test Alert
-          </Button>
-          <DailySummaryButton />
-          <Button
-            onClick={async () => {
-              try {
-                const res = await fetch("/api/generate/selfrepair/summary?sendEmail=true", {
-                  headers: {
-                    Authorization: `Bearer ${localStorage.getItem("adminKey")}`,
-                  },
-                });
-                const data = await res.json();
-                if (data.summary) {
-                  alert("✅ AI summary emailed successfully!");
-                } else {
-                  alert("⚠️ Failed: " + (data.error || "Unknown error"));
-                }
-              } catch (err) {
-                alert("⚠️ Error: " + (err as Error).message);
-              }
-            }}
-            variant="outline"
-          >
-            🤖 Generate AI Health Summary
-          </Button>
-        </div>
-      </div>
-
-      <div className="mt-8">
-        <SelfRepairTrend />
-        <WeeklyRollupCard />
-      </div>
-
-      {loading && (
-        <div className="text-center text-gray-500 animate-pulse">
-          Checking system health...
-        </div>
-      )}
-
-      {error && <div className="text-red-600">Error: {error}</div>}
-
       {data && (
         <>
           <LastAlertPanel />
+
+          <SectionCard
+            title="📜 Event Log"
+            body={
+              <LogPanel />
+            }
+          />
 
           <SectionCard
             title="🧾 Overview"
@@ -340,65 +248,7 @@ export default function SelfRepairDashboard() {
   );
 }
 
-function TestAlertButton() {
-  const [enabled, setEnabled] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [provider, setProvider] = useState<string | null>(null);
 
-  // Detect alert system configuration
-  useEffect(() => {
-    const detectAlerts = async () => {
-      try {
-        const res = await fetch("/api/generate/selfrepair/config");
-        const data = await res.json();
-        if (data.alerts?.enabled) {
-          setEnabled(true);
-          setProvider(data.alerts.provider);
-        } else {
-          setEnabled(false);
-        }
-      } catch {
-        setEnabled(false);
-      }
-    };
-    detectAlerts();
-  }, []);
-
-  const sendTest = async () => {
-    if (!enabled) return; // Prevent action if not enabled
-    setLoading(true);
-    try {
-      const res = await fetch("/api/generate/selfrepair/alert-test", {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("adminKey")}`,
-        },
-      });
-      const data = await res.json();
-      if (data.success) {
-        alert(`✅ Test alert sent via ${data.provider} to ${data.sentTo}`);
-      } else {
-        alert(`⚠️ Failed: ${data.error || "Unknown error"}`);
-      }
-    } catch (err) {
-      alert("⚠️ Error sending test alert: " + (err as Error).message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  if (!enabled)
-    return (
-      <Button variant="ghost" disabled className="opacity-60 cursor-not-allowed">
-        Alerts not configured
-      </Button>
-    );
-
-  return (
-    <Button onClick={sendTest} disabled={loading} className="flex items-center gap-2">
-      {loading ? "Sending..." : `Send Test Alert (${provider})`}
-    </Button>
-  );
-}
 
 function LastAlertPanel() {
   const [alert, setAlert] = useState<any | null>(null);

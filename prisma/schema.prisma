@@ -14,11 +14,21 @@ model Brand {
   description        String
   mission            String?
   vision             String?
-  values             String?
+  values             Json?
+  targetAudience     String?
+  usp                String?
+  personalityTraits  Json?
+  messagingMatrix    Json?
+  postIdeas          Json?
+  brandBook          String?
+  toneGuide          String?
+  contentPillars     Json?
+  consistencyScores  ConsistencyScore[]
   slogans            Json?
   colorPalettes      Json?
   logoIdeas          Json?
   generatedLogoImage String?
+  typographyPairings Json?
   notionPageId       String?
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
@@ -61,6 +71,18 @@ model User {
   accounts      Account[]
   brands        Brand[]
   sessions      Session[]
+  subscriptions UserSubscription[]
+  usageRecords  UsageRecord[]
+}
+
+model ConsistencyScore {
+  id              String    @id @default(cuid())
+  brandId         String
+  brand           Brand     @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  score           Int
+  feedback        String
+  analyzedContent String
+  timestamp       DateTime  @default(now())
 }
 
 model VerificationToken {
@@ -69,4 +91,41 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+model SubscriptionPlan {
+  id              String  @id @default(cuid())
+  name            String  @unique
+  description     String?
+  price           Float
+  currency        String  @default("USD")
+  features        Json? // Store features as JSON (e.g., { "maxBrands": 5, "aiGenerations": "unlimited" })
+  stripeProductId String?
+  stripePriceId   String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  userSubscriptions UserSubscription[]
+}
+
+model UserSubscription {
+  id                 String          @id @default(cuid())
+  userId             String          @unique
+  user               User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  planId             String
+  plan               SubscriptionPlan @relation(fields: [planId], references: [id])
+  status             String          @default("active") // e.g., active, cancelled, past_due
+  startDate          DateTime        @default(now())
+  endDate            DateTime?
+  stripeSubscriptionId String?         @unique
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+}
+
+model UsageRecord {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  feature   String // e.g., "ai_generation", "export_pdf"
+  count     Int      @default(1)
+  timestamp DateTime @default(now())
 }
