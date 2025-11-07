@@ -65,7 +65,7 @@ export async function GET() {
     const dayMs = 24 * 60 * 60 * 1000;
 
     // Group by day (last 7 days)
-    const dailyStats: { date: string; errors: number; warns: number; infos: number }[] = [];
+    const dailyStats: { date: string; errors: number; warns: number; infos: number, successRate: number }[] = [];
     for (let i = 6; i >= 0; i--) {
       const start = now - i * dayMs;
       const dayStr = new Date(start).toISOString().slice(0, 10);
@@ -152,135 +152,39 @@ export async function GET() {
 
     
 
-          const change = {
-
-    
-
-            errors: thisWeek.errors - lastWeek.errors,
-
-    
-
-            warns: thisWeek.warns - lastWeek.warns,
-
-    
-
-            infos: thisWeek.infos - lastWeek.infos,
-
-    
-
-            successRate: thisWeek.successRate - lastWeek.successRate,
-
-    
-
-          };
-
-    
-
-        
-
-    
-
-          // Compute overall confidence score (0–100)
-
-    
-
-          function computeConfidence(summary: { successRate: number; errors: number; warns: number; total: number }) {
-
-    
-
-            if (summary.total === 0) return 100;
-
-    
-
-            // Weighted deduction formula
-
-    
-
-            const base = summary.successRate;
-
-    
-
-            const penalty = summary.errors * 2 + summary.warns * 1;
-
-    
-
-            const deduction = Math.min(penalty / (summary.total / 5), 30); // cap at -30%
-
-    
-
-            return Math.max(0, Math.min(100, base - deduction));
-
-    
-
-          }
-
-    
-
-        
-
-    
-
-          const confidence = {
-
-    
-
-            thisWeek: computeConfidence(thisWeek),
-
-    
-
-            lastWeek: computeConfidence(lastWeek),
-
-    
-
-            change: computeConfidence(thisWeek) - computeConfidence(lastWeek),
-
-    
-
-          };
-
-    
-
-        
-
-    
-
-          return NextResponse.json({
-
-    
-
-            status: "ok",
-
-    
-
-            sent: true,
-
-    
-
-            totals: { total, errors, warns, infos },
-
-    
-
-            trend: dailyStats,
-
-    
-
-            thisWeek,
-
-    
-
-            lastWeek,
-
-    
-
-            change,
-
-    
-
-            confidence,
-
-    
-
-          });
+    const weekMs = 7 * dayMs;
+    const thisWeekLogs = logs.filter((e) => now - Date.parse(e.time || "") <= weekMs);
+    const lastWeekLogs = logs.filter((e) => {
+      const t = Date.parse(e.time || "");
+      return t > now - 2 * weekMs && t < now - weekMs;
+    });
+
+    const thisWeek = summarize(thisWeekLogs);
+    const lastWeek = summarize(lastWeekLogs);
+
+    const change = {
+      errors: thisWeek.errors - lastWeek.errors,
+      warns: thisWeek.warns - lastWeek.warns,
+      infos: thisWeek.infos - lastWeek.infos,
+      successRate: thisWeek.successRate - lastWeek.successRate,
+    };
+
+    const confidence = {
+      thisWeek: computeConfidence(thisWeek),
+      lastWeek: computeConfidence(lastWeek),
+      change: computeConfidence(thisWeek) - computeConfidence(lastWeek),
+    };
+
+    return NextResponse.json({
+      status: "ok",
+      sent: true,
+      totals: { total, errors, warns, infos },
+      trend: dailyStats,
+      thisWeek,
+      lastWeek,
+      change,
+      confidence,
+    });
 
     
 
@@ -323,3 +227,12 @@ export async function GET() {
       return { total, errors, warns, infos, successRate };
 
     }
+
+function computeConfidence(summary: { successRate: number; errors: number; warns: number; total: number }) {
+  if (summary.total === 0) return 100;
+  // Weighted deduction formula
+  const base = summary.successRate;
+  const penalty = summary.errors * 2 + summary.warns * 1;
+  const deduction = Math.min(penalty / (summary.total / 5), 30); // cap at -30%
+  return Math.max(0, Math.min(100, base - deduction));
+}

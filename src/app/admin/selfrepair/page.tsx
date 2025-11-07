@@ -1,13 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
+import { useEffect, useState, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { RefreshCw, Wrench, Lock } from "lucide-react";
 import DailySummaryButton from "@/components/DailySummaryButton";
 import SelfRepairTrend from "@/components/SelfRepairTrend";
 import WeeklyRollupCard from "@/components/WeeklyRollupCard";
+import LogPanel from "@/components/LogPanel";
 
 interface SelfRepairReport {
   timestamp: string;

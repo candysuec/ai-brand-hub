@@ -2,13 +2,13 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 /**
- * Admin Access Middleware
+ * Admin Access Proxy
  * -----------------------
  * Protects /admin routes (e.g. /admin/selfrepair)
  * You can extend this to integrate with NextAuth or your own auth logic.
  */
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) { // Renamed from middleware to proxy
   const { pathname } = request.nextUrl;
 
   // Only guard admin routes
@@ -33,7 +33,7 @@ export function middleware(request: NextRequest) {
   return NextResponse.next();
 }
 
-// Limit middleware to these paths
+// Limit proxy to these paths
 export const config = {
   matcher: ["/admin/:path*"],
 };

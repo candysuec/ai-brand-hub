@@ -130,7 +130,7 @@ export async function runSelfRepair(dryrun = false, repair = false) {
     const entries = fs.readdirSync(dir, { withFileTypes: true });
     for (const entry of entries) {
       const full = path.join(dir, entry.name);
-      if (entry.isDirectory()) scan(full); // Assuming scan is a typo and should be scanDir
+      if (entry.isDirectory()) scanDir(full);
       else rewriteImportsAndMethods(full);
     }
   }

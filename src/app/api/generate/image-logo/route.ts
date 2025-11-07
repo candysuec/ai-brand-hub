@@ -1,9 +1,11 @@
-import { GoogleGenAI, Content } from "@google/genai"; // Import Content
+import { NextRequest, NextResponse } from 'next/server';
+import { PrismaClient } from '@prisma/client';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/auth'; // ADDED THIS MISSING IMPORT
 
 // ✅ Load your Gemini API key from environment variables
-const genAI = new GoogleGenAI({
-  apiKey: process.env.GEMINI_API_KEY!,
-});
+import { GoogleGenerativeAI } from "@google/generative-ai";
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
 export async function POST(req: Request) {
   const prisma = new PrismaClient(); // Instantiate PrismaClient

@@ -1,0 +1,72 @@
+[
+  {
+    "key": "NEXTAUTH_SECRET",
+    "value": "YOUR_32_CHAR_RANDOM_SECRET_HERE",
+    "type": "secret"
+  },
+  {
+    "key": "NEXTAUTH_URL",
+    "value": "https://your-vercel-domain.vercel.app",
+    "type": "plain"
+  },
+  {
+    "key": "GOOGLE_CLIENT_ID",
+    "value": "YOUR_GOOGLE_CLIENT_ID_HERE",
+    "type": "secret"
+  },
+  {
+    "key": "GOOGLE_CLIENT_SECRET",
+    "value": "YOUR_GOOGLE_CLIENT_SECRET_HERE",
+    "type": "secret"
+  },
+  {
+    "key": "GEMINI_API_KEY",
+    "value": "YOUR_GEMINI_API_KEY_HERE",
+    "type": "secret"
+  },
+  {
+    "key": "ADMIN_ACCESS_KEY",
+    "value": "YOUR_ADMIN_ACCESS_KEY_HERE",
+    "type": "secret"
+  },
+  {
+    "key": "RESEND_API_KEY",
+    "value": "YOUR_RESEND_API_KEY_HERE",
+    "type": "secret"
+  },
+  {
+    "key": "SENDGRID_API_KEY",
+    "value": "YOUR_SENDGRID_API_KEY_HERE",
+    "type": "secret"
+  },
+  {
+    "key": "ALERTS_PROVIDER",
+    "value": "resend",
+    "type": "plain"
+  },
+  {
+    "key": "ALERTS_FROM",
+    "value": "AI Brand Hub <alerts@yourdomain.com>",
+    "type": "plain"
+  },
+  {
+    "key": "ALERTS_TO",
+    "value": "you@yourdomain.com, teammate@yourdomain.com",
+    "type": "plain"
+  },
+  {
+    "key": "ALERTS_MIN_LEVEL",
+    "value": "warn",
+    "type": "plain"
+  },
+  {
+    "key": "NEXT_PUBLIC_BASE_URL",
+    "value": "https://your-vercel-domain.vercel.app",
+    "type": "plain"
+  },
+  {
+    "key": "SELFREPAIR_RETENTION_DAYS",
+    "value": "30",
+    "type": "plain"
+  }
+]

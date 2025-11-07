@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 /**
  * Health route with self-healing logic.
@@ -19,7 +19,7 @@ export async function POST(request: Request) {
 
   try {
     const { prompt = "healthcheck" } = await request.json();
-    const genAI = new GoogleGenAI({ apiKey });
+    const genAI = new GoogleGenerativeAI(apiKey);
 
     // --- Self-healing phase 1: detect legacy method ---
     // Some outdated helpers might have patched genAI with listModels.
@@ -57,7 +57,7 @@ export async function POST(request: Request) {
         "[healthcheck] Caught listModels error, re-initializing client..."
       );
       try {
-        const genAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
+        const genAI = new GoogleGenerativeAI(apiKey);
         const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
         const result = await model.generateContent("retry healthcheck");
         const text = result.response.text();
