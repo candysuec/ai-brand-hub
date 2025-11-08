@@ -22,27 +22,26 @@ export default function DiagnosticsPage() {
   const [loading, setLoading] = useState(false); // Set to false since we have mock data
   const [error, setError] = useState<string | null>(null);
 
-  // Comment out fetchDiagnostics and useEffect to prevent API call while using mock data
-  // const fetchDiagnostics = async () => {
-  //   setLoading(true);
-  //   setError(null);
-  //   try {
-  //     const res = await fetch("/api/system-check");
-  //     if (!res.ok) {
-  //       throw new Error(`HTTP error! status: ${res.status}`);
-  //     }
-  //     const data: DiagnosticResult = await res.json();
-  //     setResults(data);
-  //   } catch (err: any) {
-  //     setError(err.message);
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
+  const fetchDiagnostics = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/system-check");
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`);
+      }
+      const data: DiagnosticResult = await res.json();
+      setResults(data);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  // useEffect(() => {
-  //   fetchDiagnostics();
-  // }, []);
+  useEffect(() => {
+    fetchDiagnostics();
+  }, []);
 
   const getIcon = (status: string) => {
     if (status.includes("✅")) return <CheckCircle className="text-green-500" />;
